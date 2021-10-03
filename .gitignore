@@ -8,6 +8,8 @@
 *.xlsx
 *.pth
 *.txt
+*.npy
+*.parquet
 
 
 # Byte-compiled / optimized / DLL files
