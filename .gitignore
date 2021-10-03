@@ -10,6 +10,7 @@
 *.txt
 *.npy
 *.parquet
+*.png
 
 
 # Byte-compiled / optimized / DLL files
