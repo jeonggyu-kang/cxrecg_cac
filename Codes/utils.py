@@ -2,6 +2,9 @@ import torch
 import os
 import matplotlib.pyplot as plt
 
+#* tensorboard
+from tensorboardX import SummaryWriter
+
 class SaveManager():
     def __init__(self, version=None, save_root='../save/', load=False):
         assert version or load
@@ -18,9 +21,28 @@ class SaveManager():
             exp_num = self.get_exp_num(save_root)
             self.save_dir = os.path.join(save_root, '{:04d}_{}'.format(exp_num, version))
 
+
+            self.writer = SummaryWriter(self.save_dir)
+
     def log(self, text):
 
         return
+
+    def close(self, best_acc = None) -> None:
+        self.writer.close()
+
+        if best_acc:
+            with open(os.path.join(self.save_dir, 'accuracy.txt'), 'w') as f:
+                f.write('Accuracy: ' + str(best_acc))
+
+
+
+    #* write log 'train/acc
+    def log(self, text: str, value: float, global_step: int) -> None:
+        '''
+
+        '''
+        self.writer.add_scalar(text, value, global_step)
 
 
     def get_exp_num(self, save_root):

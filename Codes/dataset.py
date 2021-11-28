@@ -4,7 +4,7 @@ from torch.utils.data import Dataset, DataLoader
 import torch
 from torchvision import transforms
 from PIL import Image
-import pydicom
+# import pydicom
 import os
 
 

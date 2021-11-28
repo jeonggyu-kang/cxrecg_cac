@@ -11,9 +11,12 @@ import numpy as np
 import random
 import matplotlib
 
+import config as cfg
+
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", type=str, required=True)
+    #!
+    parser.add_argument("--version", type=str, default = None, required=False)
     # dataset
 
     # learning hyperparameter
@@ -22,12 +25,15 @@ def parse_args():
     parser.add_argument("--epoch", type=int, default=100, help='')
     parser.add_argument("--eval_epoch", type=int, default=5, help='')
     # model hyperparameter
-    parser.add_argument("--model_name", type=str, default='rexnetv1-1.0', choices=['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'rexnetv1-1.0', 'rexnetv1-1.3', 'rexnetv1-1.5', 'rexnetv1-2.0', 'rexnetv1-3.0'])
+    #! deprecated
+    # parser.add_argument("--model_name", type=str, default='rexnetv1-1.0', choices=['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'rexnetv1-1.0', 'rexnetv1-1.3', 'rexnetv1-1.5', 'rexnetv1-2.0', 'rexnetv1-3.0'])
     parser.add_argument("--pretrained", action='store_true', default=False, help='')
     parser.add_argument("--optimizer_name", type=str, default='Adam', choices=['Adam'])
     # etc
-    parser.add_argument("--print_cycle", type=int, default=100, help='')
+    parser.add_argument("--print_cycle", type=int, default=8, help='')    
     parser.add_argument("--seed", type=int, default=42, help='')
+    
+    #!
     parser.add_argument("--n_class", type=int, default=5)
 
     args = parser.parse_args()
@@ -45,6 +51,10 @@ def set_seed(seed):
 
 def main():
     args = parse_args()
+
+    if args.version is None:
+        args.version = cfg.VERSION
+
     set_seed(args.seed)
 
 
@@ -61,10 +71,12 @@ def main():
 
     criterion = nn.CrossEntropyLoss()
 
+
     save_manager = utils.SaveManager(args.version)
 
     print("Training starts")
     best_loss = 1e10
+    global_step = 0
     for epoch in range(args.epoch):
         # train
         model.train()
@@ -83,8 +95,12 @@ def main():
 
             mean_loss += loss.item()
             step+=1
+
+            global_step += 1 #* count global setp
             if step % args.print_cycle == 0 :
                 print('Batch [{}/{}] Loss [{:.6f}]'.format(step, len(train_dataloader), mean_loss / step))
+                save_manager.log('train/loss', mean_loss/step, global_step)
+                
         print("Epoch [{}/{}] Training loss [{:.6f}]".format(epoch+1, args.epoch, mean_loss/step))
                 
         
@@ -115,7 +131,8 @@ def main():
                 
                 
                 print("Epoch [{}/{}] Accuracy [{:.6f}] Validation loss [{:.6f}]".format(epoch + 1, args.epoch, acc, mean_loss))
-
+                save_manager.log('val/loss', mean_loss/step, global_step)
+                save_manager.log('val/acc', acc.item(), global_step)
 
                 if mean_loss < best_loss:
                     best_loss = mean_loss
@@ -149,7 +166,8 @@ def main():
         
     acc = torch.mean((preds.argmax(1) == labels).float())
     print('Version {} - Best accuracy : {}'.format(args.version, acc))
-    
+    #* close logger
+    save_manager.close(best_acc=acc)    
     return
 
 
