@@ -8,7 +8,7 @@ from PIL import Image
 import os
 
 
-def get_dataloader(batch_size, split='train', num_workers=8):
+def get_dataloader(batch_size, split='train', num_workers=2):
     if split == 'train':
         train_path = '../Data/train_dataset.parquet'
         train_df = pd.read_parquet(train_path, engine='pyarrow')
